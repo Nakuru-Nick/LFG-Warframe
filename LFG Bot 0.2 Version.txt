@@ -1,0 +1,172 @@
+import discord
+import random
+from discord.ext import commands
+
+bot_texts = {
+    "Initiate": [
+        "Tenno, a new Tenno operative has emerged from their sleep, will you be kind and guide {user_mention} in their upcoming journeys and be a mentor to them?",
+        "Tenno, a new Tenno operative has emerged from their sleep, will you be kind and guide {user_mention} as a mentor just like how we started from the beginning?"
+    ],
+    "LFG": [
+        "Tenno, a fellow Tenno operative needs your help in {event_type}, will you join this mission and help {user_mention} conquer their quests?",
+        "Tenno, a fellow Tenno operative needs your help for their adventures, will you join them and help {user_mention} set forth in creating a joyous memory?"
+    ]
+}
+
+event_types = [
+    "Sortie",
+    "Nightwave",
+    "Event",
+    "Invasion",
+    "Fissure",
+    "Arbitration",
+    "Railjack",
+    "Elite Sanctuary Onslaught",
+    "Thermia Fracture",
+    "Nightmare Survival",
+    "Defense",
+    "Excavation",
+    "Interception",
+    "Survival",
+    "Sabotage",
+    "Rescue",
+    "Spy",
+    "Defection",
+    "Capture",
+    "Free-roam",
+    "Node Missions",
+    "Duviri"
+]
+
+intents = discord.Intents.default()
+intents.members = True
+intents.presences = True
+intents.messages = True
+intents.message_content = True
+
+client = commands.Bot(command_prefix="$", intents=intents, help_command=None)
+lfg_posts = []
+
+
+@client.event
+async def on_ready():
+    print(f"LFG Bot is ready!")
+
+
+@client.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        await ctx.send("Invalid command. Use `$help` to see a list of available commands.")
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send("Missing required arguments. Use `$help <command>` to see the command usage.")
+    else:
+        await ctx.send(f"An error occurred: {str(error)}")
+
+
+@client.command(name="create")
+async def create_lfg(ctx, game, platform):
+    role = get_user_role(ctx.author)
+
+    if role not in bot_texts:
+        await ctx.send("Invalid role. Available roles: Initiate, LFG")
+        return
+
+    bot_text = random.choice(bot_texts[role])
+    event_type = random.choice(event_types)
+    user_mention = ctx.author.mention
+
+    description = bot_text.format(user_mention=user_mention, event_type=event_type)
+
+    embed = discord.Embed(
+        title="LFG",
+        description=description,
+        color=discord.Color.blue()
+    )
+    embed.add_field(name="Platform", value=platform)
+
+    await ctx.send(embed=embed)
+
+    # Add the LFG post to the list
+    lfg_posts.append({"game": game, "platform": platform, "role": role})
+
+
+@client.command(name="search")
+async def search_lfg(ctx, game, platform):
+    results = []
+    for post in lfg_posts:
+        if post["game"] == game and post["platform"] == platform:
+            results.append(post)
+
+    if results:
+        embed = discord.Embed(
+            title="LFG - Search Results",
+            description="Here are the results for your search:",
+            color=discord.Color.green()
+        )
+
+        for result in results:
+            embed.add_field(name=result['game'], value=f"Platform: {result['platform']}", inline=False)
+
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send("No matching results found.")
+
+
+@client.command(name="filter")
+async def filter_lfg(ctx, game, platform, role):
+    results = []
+    for post in lfg_posts:
+        if post["game"] == game and post["platform"] == platform and post["role"] == role:
+            results.append(post)
+
+    if results:
+        embed = discord.Embed(
+            title="LFG - Filter Results",
+            description="Here are the results for your filter:",
+            color=discord.Color.green()
+        )
+
+        for result in results:
+            embed.add_field(name=result['game'], value=f"Platform: {result['platform']}", inline=False)
+
+        await ctx.send(embed=embed)
+    else:
+        await ctx.send("No matching results found.")
+
+
+@client.command(name="help")
+async def help_command(ctx):
+    help_message = """
+    **LFG Bot Help**
+
+    **Commands:**
+    `$create <game> <platform>` - Create an LFG post.
+    `$search <game> <platform>` - Search for LFG posts by game and platform.
+    `$filter <game> <platform> <role>` - Filter LFG posts by game, platform, and role.
+    `$ping` - Check the bot's latency.
+    `$help` - Show this help message.
+    """
+    embed = discord.Embed(
+        title="LFG Bot Help",
+        description=help_message,
+        color=discord.Color.orange()
+    )
+    await ctx.send(embed=embed)
+
+
+@client.command(name="ping")
+async def ping(ctx):
+    latency = client.latency
+    await ctx.send(f"Pong! Latency: {latency * 1000:.2f} ms")
+
+
+def get_user_role(author):
+    for role in author.roles:
+        if role.name == "Initiate":
+            return "Initiate"
+    return "LFG"
+
+
+# Replace 'YOUR_TOKEN' with your bot token
+
+client.run("MTEyMTY4NzI0NTk1MTMzNjUyOQ.GGapZQ.DeecEr1Z5pNq1EuCMVYh-qjGFygmE1-3Z9Nx-o")
