@@ -5,7 +5,9 @@ from discord.ext import commands
 import sqlite3
 import datetime
 import math
+import os
 
+token = os.environ.get('DISCORD_TOKEN')
 
 conn = sqlite3.connect('lfg.db')
 cursor = conn.cursor()
@@ -478,9 +480,9 @@ async def report(ctx, *, bug_description):
 
 
 try:
-    bot.run('MTEyMTY4NzI0NTk1MTMzNjUyOQ.GGapZQ.DeecEr1Z5pNq1EuCMVYh-qjGFygmE1-3Z9Nx-o')
+    bot.run('token')
 
 except KeyboardInterrupt:
     # Handle the keyboard interrupt, e.g., perform cleanup or exit gracefully
-    pass  # or raise an exception or perform necessary cleanup
+    pass  # or raise an exception or perform the necessary cleanup
 
