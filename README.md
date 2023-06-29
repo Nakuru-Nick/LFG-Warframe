@@ -29,8 +29,9 @@ The bot uses a SQLite database to store information about LFG posts and guild-sp
 1. Clone the repository:
 
 ```shell
-git clone https://github.com/yourusername/discord-lfg-bot.git
-cd discord-lfg-bot
+git clone https://github.com/Nakuru-Nick/LFG-Warframe.git
+cd LFG-Warframe
+
 ```
 
 2. Install the dependencies:
@@ -50,7 +51,7 @@ DISCORD_TOKEN=your_bot_token_here
 5. Run the bot:
 
 ```shell
-python bot.py
+LFG Bot Main.py
 ```
 
 ## Contributing
