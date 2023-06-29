@@ -9,6 +9,8 @@ import os
 
 token = os.environ.get('DISCORD_TOKEN')
 
+
+
 conn = sqlite3.connect('lfg.db')
 cursor = conn.cursor()
 
@@ -480,7 +482,7 @@ async def report(ctx, *, bug_description):
 
 
 try:
-    bot.run('token')
+    bot.run(token)
 
 except KeyboardInterrupt:
     # Handle the keyboard interrupt, e.g., perform cleanup or exit gracefully
