@@ -14,9 +14,6 @@ load_dotenv()
 import os
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 
-# Your bot code here
-
-
 conn = sqlite3.connect('lfg.db')
 cursor = conn.cursor()
 
@@ -481,7 +478,7 @@ async def report(ctx, *, bug_description):
 
 
 try:
-    bot.run(token)
+    bot.run(DISCORD_TOKEN)
 
 except KeyboardInterrupt:
     # Handle the keyboard interrupt, e.g., perform cleanup or exit gracefully
