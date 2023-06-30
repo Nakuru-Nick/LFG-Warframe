@@ -5,6 +5,16 @@ from discord.ext import commands
 import sqlite3
 import datetime
 import math
+from dotenv import load_dotenv
+
+# Load the environment variables from .env file
+load_dotenv()
+
+# Access the DISCORD_TOKEN environment variable
+import os
+DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+
+# Your bot code here
 
 
 conn = sqlite3.connect('lfg.db')
@@ -53,17 +63,10 @@ async def on_ready():
     print(f"Bot ID: {bot.user.id}")
     print("------")
     
-#@bot.event
-#async def on_component(ctx):
-   # await bot.process_commands(ctx)
-
-
-#@bot.event
-#async def on_interaction(interaction):
- #   if interaction.type == discord.InteractionType.component:
- #       ctx = await bot.get_context(interaction)
-  #      await bot.invoke(ctx)
-
+@bot.command()
+async def lfg(ctx):
+    # Your LFG command code here
+    await ctx.send('LFG Warframe!')
 
 
 @bot.event
@@ -478,7 +481,7 @@ async def report(ctx, *, bug_description):
 
 
 try:
-    bot.run('MTEyMTY4NzI0NTk1MTMzNjUyOQ.GGapZQ.DeecEr1Z5pNq1EuCMVYh-qjGFygmE1-3Z9Nx-o')
+    bot.run(DISCORD_TOKEN)
 
 except KeyboardInterrupt:
     # Handle the keyboard interrupt, e.g., perform cleanup or exit gracefully
