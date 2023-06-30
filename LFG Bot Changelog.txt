@@ -1,0 +1,124 @@
+**Version 0.2 Beta**
+New Beginning
+
+Certainly! Here's a changelog of the modifications made to the code:
+
+1. Modified the `bot_texts` dictionary:
+   - Replaced the bot texts with lists corresponding to the roles.
+   - Added separate bot texts for the "Initiate" and "LFG" roles.
+
+2. Removed the `players` parameter from the `create_lfg` command:
+   - The number of players needed is no longer required as a parameter.
+
+3. Added the `get_user_role` function:
+   - Retrieves the user's role based on their roles in the server.
+   - Returns "Initiate" if the user has the "Initiate" role, otherwise returns "LFG".
+
+4. Modified the `create_lfg` command:
+   - Removed the `players` parameter.
+   - Added role detection using `get_user_role`.
+   - Selected a bot text based on the user's role.
+   - Removed role mentioning in the description.
+   - Added user mentioning using `@` in the bot text.
+
+5. Modified the `search_lfg` command:
+   - Updated the embed title and description.
+
+6. Modified the `filter_lfg` command:
+   - Updated the embed title and description.
+
+7. Modified the `help` command:
+   - Renamed the command to `help_command` to avoid conflicts with the existing `help` command.
+   - Updated the help message and embed title.
+
+8. Updated the `create_lfg` and `search_lfg` embeds:
+   - Removed the "Players" field from the embeds.
+
+These changes ensure that the bot detects the user's role, selects the appropriate bot text, and mentions the user using `@` in the bot text. The role mentioning is removed, and the "Players" field is omitted from the embeds.
+
+**Version 0.3 Changelog**
+
+1. Improved `help_command`:
+   - Updated the help message to provide more information about each command, including syntax, arguments, and output.
+   - Utilized an embed for a visually appealing help command.
+
+2. Enhanced `search_lfg` function:
+   - Added criteria for game mode, difficulty, and time of day.
+   - Implemented filtering of results based on the specified criteria.
+   - Improved user-friendliness by allowing users to filter results and save filters for future use.
+
+3. Enhanced `filter_lfg` function:
+   - Added criteria for game mode, difficulty, and time of day.
+   - Implemented filtering of LFG posts based on the specified criteria.
+   - Improved user-friendliness by allowing users to save filters for future use.
+
+4. Added a rating system for LFG posts:
+   - Users can now rate LFG posts to indicate their quality.
+   - The ratings help other users find high-quality LFG posts.
+
+5. Added a report feature for LFG posts:
+   - Users can report inappropriate or spammy LFG posts.
+
+6. Categorized event types into 4 categories:
+   - Free-roaming, Hunting, Farming, and Node Missions.
+
+7. Added reactions for participation and role mentioning in LFG posts:
+   - Users can now react to LFG posts to indicate their interest in participating.
+   - LFG posts now mention the roles for better clarity.
+
+8. Expanded the usage of embeds:
+   - Added more embeds throughout the code for improved visual presentation and organization.
+
+**Chagelog 0.3.1 (Overhaul)**
+
+Here's an overview of the modifications and additions made to the code:
+
+1. Created a SQLite database to store LFG posts.
+2. Added the `create` command to allow users to create LFG posts.
+   - Users provide the LFG posting content, and the current timestamp is automatically recorded.
+   - The LFG post is displayed as an embed with the timestamp and the user's display name.
+   - The post is stored in the database along with the user ID, LFG posting content, and timestamp.
+   - The LFG role is pinged to notify others about the new post.
+   - A delay and bot response are added to provide feedback during post registration.
+3. Added the `filter` command to filter LFG posts based on search terms.
+   - Users enter a search term, and the command displays matching posts in embed format.
+4. Added the `delete` command to delete LFG posts using their post IDs.
+   - The command removes the post from the database and deletes the corresponding message.
+5. Added the `ping` command to check the bot's latency.
+6. Removed the default `help` command and replaced it with a customized `help` command.
+   - The command displays a help message with the available commands and their descriptions.
+7. Implemented error handling for invalid commands.
+   - Users receive an error message for unrecognized commands.
+8. Added the `cancel` command to cancel ongoing `create` and `filter` commands.
+   - Users can use this command to terminate the command process.
+   - The command is only available during the `create` and `filter` commands.
+9. Added a unique post ID generation for each LFG post.
+   - The post ID is displayed on the LFG post embed.
+   - The ID is stored in the database for future reference.
+10. Created the `list` command to display all registered LFG posts.
+   - The command shows the post ID and the username of the user who created the post.
+
+**Changelog 0.4.0**
+
+Here's an overview of the modifications and additions made to the code in version 0.4.0:
+
+1. Added the `$set_lfg_channel` command to set the channel where LFG posts can be created.
+   - Users with appropriate permissions can use this command to specify the LFG channel.
+   - The bot will restrict LFG post creation to the designated channel.
+2. Added the `$set_active_channel` command to set the channel where the bot listens for LFG commands.
+   - This command allows users to define the channel where the bot will respond to LFG commands.
+   - Only users with appropriate permissions can utilize this command.
+3. Added the `$set_lfg_role` command to set the role that is mentioned when a new LFG post is created.
+   - Users with the necessary permissions can use this command to specify the LFG role to be mentioned.
+   - The specified role will be pinged when a new LFG post is registered.
+4. Added the `$set_lfg_ping_role` command to set the role that can be pinged for LFG posts.
+   - Users can utilize this command to define the role that can be pinged for LFG posts.
+   - Only users with appropriate permissions can use this command.
+5. Updated the `$create` command to only allow LFG post creation in the designated LFG channel.
+   - If a user attempts to create an LFG post outside the specified channel, an error message will be displayed.
+6. Improved the error handling for invalid commands or incorrect usage.
+   - Users will receive clearer error messages when using commands incorrectly or using unrecognized commands.
+7. Updated the `$list` command to display the LFG post descriptions alongside the post ID and username.
+   - This enhancement provides users with more information about each LFG post.
+8. Added the `$about` command to display information about the bot.
+   - Users can utilize this command to obtain details about the bot, such as version and creator information.
