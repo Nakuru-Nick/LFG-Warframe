@@ -31,7 +31,7 @@ CHANNEL_ID = "1123912418360307788"
 def send_message_to_server(message):
     try:
         headers = {
-            "Authorization": f"Bot {DISCORD_TOKEN}",
+            "Authorization": "Bot " + "DISCORD_TOKEN",
             "Content-Type": "application/json"
         }
 
