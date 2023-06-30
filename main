@@ -7,37 +7,8 @@ from discord.ext import commands
 import sqlite3
 import datetime
 import math
+import os
 from dotenv import load_dotenv
-
-# Set up logging
-logging.basicConfig(level=logging.ERROR)
-logger = logging.getLogger(__name__)
-
-# Define server and channel information
-SERVER_ID = '1121721749860515901'
-CHANNEL_ID = '1123912418360307788'
-
-def send_message_to_server(message):
-    try:
-        # Send message to server
-        response = requests.post(f"https://api.example.com/servers/{SERVER_ID}/channels/{CHANNEL_ID}/messages", json={'content': message})
-        response.raise_for_status()
-        logger.info("Message sent successfully")
-    except requests.exceptions.HTTPError as e:
-        logger.error(f"HTTP error occurred while sending message: {e}")
-        raise
-    except requests.exceptions.RequestException as e:
-        logger.error(f"An error occurred while sending message: {e}")
-        raise
-
-# Example usage
-try:
-    send_message_to_server("Hello, server!")
-except Exception as e:
-    # Log the exception to the specified server and channel
-    logger.error(f"An exception occurred: {e}")
-    send_message_to_server(f"An exception occurred: {e}")
-
 
 # Load the environment variables from .env file
 load_dotenv()
@@ -45,6 +16,41 @@ load_dotenv()
 # Access the DISCORD_TOKEN environment variable
 import os
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+
+# Set up logging
+logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger(__name__)
+
+
+# Load environment variables from .env file
+load_dotenv()
+
+SERVER_ID = "1121721749860515901"
+CHANNEL_ID = "1123912418360307788"
+
+def send_message_to_server(message):
+    try:
+        bot_token = os.getenv("DISCORD_TOKEN")
+
+        headers = {
+            "Authorization": f"Bot {bot_token}",
+            "Content-Type": "application/json"
+        }
+
+        # Send message to server
+        url = f"https://discord.com/api/v9/channels/{CHANNEL_ID}/messages"
+        payload = {"content": message}
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        print("Message sent successfully")
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error occurred while sending message: {e}")
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred while sending message: {e}")
+
+# Example usage
+send_message_to_server("Hello, server!")
+
 
 # Your bot code here
 
@@ -354,6 +360,26 @@ async def list(ctx):
 
         if not posts:
             await ctx.send("No LFG posts found.")
+            return
+
+        if len(posts) <= 4:
+            embed = discord.Embed(title="LFG Posts", color=0x00ff00)
+
+            for post in posts:
+                author = ctx.guild.get_member(post[1]).mention
+                description = post[2] or "No description available"
+                category = post[4]
+                time_and_date = post[3]
+
+                embed.add_field(name="ID", value=post[0], inline=True)
+                embed.add_field(name="Author", value=author, inline=True)
+                embed.add_field(name="Description", value=description, inline=True)
+                embed.add_field(name="Category", value=category, inline=True)
+                embed.add_field(name="Time and Date", value=time_and_date, inline=True)
+                embed.add_field(name="\u200b", value="".join(["-" for _ in range(len(embed.fields[0].value))]), inline=False)
+
+            embed.set_footer(text="No pagination needed.")
+            await ctx.send(embed=embed)
             return
 
         posts_per_page = 4
