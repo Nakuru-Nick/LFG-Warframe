@@ -123,9 +123,23 @@ async def create(ctx):
 
     try:
         await ctx.send("Enter the details for your LFG post.")
-        await ctx.send("Please provide the LFG posting's description:")
-        lfg_posting = await bot.wait_for("message", check=check_author(ctx.author))
-        lfg_posting = lfg_posting.content
+
+        description_embed = discord.Embed(title="LFG Post Description", description="Please provide the LFG posting's description:")
+        description_message = await ctx.send(embed=description_embed)
+
+        def check_cancel(reaction, user):
+            return user == ctx.author and str(reaction.emoji) == "❌" and reaction.message.id == description_message.id
+
+        await description_message.add_reaction("❌")
+
+        try:
+            description_response = await bot.wait_for("message", check=check_author(ctx.author), timeout=60)
+            lfg_posting = description_response.content
+        except asyncio.TimeoutError:
+            await ctx.send("LFG post creation timed out.")
+            return
+        finally:
+            await description_message.clear_reactions()
 
         time_and_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
