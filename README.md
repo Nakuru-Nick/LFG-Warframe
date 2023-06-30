@@ -51,7 +51,7 @@ DISCORD_TOKEN=your_bot_token_here
 5. Run the bot:
 
 ```shell
-LFG Bot Main.py
+main.py
 ```
 
 ## Contributing

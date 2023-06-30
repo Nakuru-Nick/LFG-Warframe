@@ -1,1 +1,12 @@
 # Here the Fix Notes or Features to be added are mentioned:
+
+
+Based on the feedback provided, here are some suggested improvements for the bot:
+
+1. Initial Configuration: Instead of having the initial configuration options as reactions in a public message, consider sending a direct message or pop-up dialogue box to the creator to set the configuration privately. This can provide a more intuitive and user-friendly experience.
+
+2. Grouping LFG Posts: After the configuration is set, create an embed post in the designated channel with reactions for users to join the queue. Group the queue into "Sure to Join" and "Interested but Not Sure" sections. Order the users within each section based on when they reacted to the post.
+
+3. Schedule or Time Feature: Implement a feature that allows users to set a schedule or time for when they want to ping the queued people. This can be a separate command where users can specify the desired time or schedule for the farm or group activity. When the specified time arrives, the bot can ping the relevant users from the queue.
+
+By incorporating these suggestions, the bot can enhance the user experience, provide a more organized grouping of LFG posts, and offer the ability to schedule pings for specific activities.
