@@ -30,10 +30,8 @@ CHANNEL_ID = "1123912418360307788"
 
 def send_message_to_server(message):
     try:
-        bot_token = os.getenv("DISCORD_TOKEN")
-
         headers = {
-            "Authorization": f"Bot {bot_token}",
+            "Authorization": f"Bot {DISCORD_TOKEN}",
             "Content-Type": "application/json"
         }
 
@@ -41,7 +39,7 @@ def send_message_to_server(message):
         url = f"https://discord.com/api/v9/channels/{CHANNEL_ID}/messages"
         payload = {"content": message}
         response = requests.post(url, headers=headers, json=payload)
-        response.raise_for_status()
+        
         print("Message sent successfully")
     except requests.exceptions.HTTPError as e:
         print(f"HTTP error occurred while sending message: {e}")
@@ -340,8 +338,13 @@ async def delete(ctx, post_id: int):
                     and reaction.emoji in [delete_emoji, confirm_emoji]
                 )
 
-            reaction, _ = await bot.wait_for("reaction_add", timeout=30.0, check=check_reaction)
+            reaction, _ = await bot.wait_for("reaction_add", timeout=120.0, check=check_reaction)
 
+            if reaction is None:
+                await message.delete()
+                await ctx.send("No reaction received. Post deletion canceled.")
+                return
+            
             if reaction.emoji == confirm_emoji:
                 cursor.execute("DELETE FROM lfg_posts WHERE post_id = ?", (post_id,))
                 conn.commit()
