@@ -36,7 +36,7 @@ def send_message_to_server(message):
         }
 
         # Send message to server
-        url = f"https://discord.com/api/v9/channels/{CHANNEL_ID}/messages"
+        url = "https://discord.com/api/v9/channels/" + CHANNEL_ID + "/messages"
         payload = {"content": message}
         response = requests.post(url, headers=headers, json=payload)
         
@@ -102,7 +102,7 @@ async def on_ready():
 @bot.command()
 async def lfg(ctx):
     # Your LFG command code here
-    await ctx.send('LFG Warframe!')
+    await ctx.reply('LFG Warframe!')
 
 
 @bot.event
@@ -131,7 +131,7 @@ async def create(ctx):
         await description_message.add_reaction("❌")
 
         try:
-            description_response = await bot.wait_for("message", check=check_author(ctx.author), timeout=60)
+            description_response = await bot.wait_for("message", check=check_author(ctx.author), timeout=60).author == ctx.author
             lfg_posting = description_response.content
         except asyncio.TimeoutError:
             await ctx.send("LFG post creation timed out.")
@@ -232,10 +232,7 @@ async def on_message(message):
         if result is not None and result[0] is not None:
             lfg_channel_id = result[0]
             if message.channel.id == lfg_channel_id:
-                # Process LFG commands here
                 await bot.process_commands(message)
-
-    await bot.process_commands(message)
 
 #Filter Commands
 
@@ -313,6 +310,7 @@ async def filter(ctx):
 #Delete Command
 
 @bot.command()
+@commands.has_permissions(manage_messages=True)
 async def delete(ctx, post_id: int):
     try:
         cursor.execute("SELECT * FROM lfg_posts WHERE post_id = ?", (post_id,))
