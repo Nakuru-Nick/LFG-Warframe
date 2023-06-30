@@ -122,3 +122,14 @@ Here's an overview of the modifications and additions made to the code in versio
    - This enhancement provides users with more information about each LFG post.
 8. Added the `$about` command to display information about the bot.
    - Users can utilize this command to obtain details about the bot, such as version and creator information.
+
+
+**Changelog 0.4.1**
+
+Changelog:
+
+- Added `set_guild_setting` command to allow setting of guild-specific configurations.
+- Combined `set_lfg_channel` and `set_active_channel` commands into a single command `set_guild_setting`.
+- Combined `set_lfg_role` and `set_lfg_ping_role` commands into a single command `set_guild_setting`.
+- Updated the `help` command to display the modified moderator commands (`set_lfg_channel` and `set_lfg_role`).
+- Modified the `help` command to provide a unified embed for all command categories (general, moderator, about, bug report).

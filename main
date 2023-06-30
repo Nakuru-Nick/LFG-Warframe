@@ -186,27 +186,28 @@ async def create(ctx):
 
 #Setting LFG Channel
 
+# Set LFG and Active Channel
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def set_lfg_channel(ctx, channel: discord.TextChannel):
-    cursor.execute("INSERT OR REPLACE INTO guilds (guild_id, lfg_channel_id) VALUES (?, ?)", (ctx.guild.id, channel.id))
-    conn.commit()
-    await ctx.send(f"LFG channel set to {channel.mention}")
+async def set_channel(ctx, lfg_channel: discord.TextChannel, active_channel: discord.TextChannel):
+    set_guild_setting(ctx.guild.id, "lfg_channel_id", lfg_channel.id)
+    set_guild_setting(ctx.guild.id, "active_channel_id", active_channel.id)
+    await ctx.send(f"LFG channel set to {lfg_channel.mention} and active channel set to {active_channel.mention}")
 
+# Set LFG Role and LFG Ping Role
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def set_active_channel(ctx, channel: discord.TextChannel):
-    cursor.execute("INSERT OR REPLACE INTO guilds (guild_id, active_channel_id) VALUES (?, ?)", (ctx.guild.id, channel.id))
-    conn.commit()
-    await ctx.send(f"Active channel set to {channel.mention}")
+async def set_role(ctx, lfg_role: discord.Role, lfg_ping_role: discord.Role):
+    set_guild_setting(ctx.guild.id, "lfg_role_id", lfg_role.id)
+    set_guild_setting(ctx.guild.id, "lfg_ping_role_id", lfg_ping_role.id)
+    await ctx.send(f"LFG role set to {lfg_role.mention} and LFG ping role set to {lfg_ping_role.mention}")
 
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def set_lfg_role(ctx, role: discord.Role):
-    cursor.execute("INSERT OR REPLACE INTO guilds (guild_id, lfg_role_id) VALUES (?, ?)", (ctx.guild.id, role.id))
+# Common function to set guild settings
+def set_guild_setting(guild_id, setting_name, setting_value):
+    cursor.execute("INSERT OR REPLACE INTO guilds (guild_id, " + setting_name + ") VALUES (?, ?)", (guild_id, setting_value))
     conn.commit()
-    await ctx.send(f"LFG role set to {role.mention}")
 
+# Event: Message received
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
@@ -224,13 +225,7 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def set_lfg_ping_role(ctx, role: discord.Role):
-    cursor.execute("INSERT OR REPLACE INTO guilds (guild_id, lfg_ping_role_id) VALUES (?, ?)", (ctx.guild.id, role.id))
-    conn.commit()
-    await ctx.send(f"LFG ping role set to {role.mention}")
-
+#Filter Commands
 
 @bot.command()
 async def filter(ctx):
@@ -368,8 +363,8 @@ async def list(ctx):
             for post in posts:
                 author = ctx.guild.get_member(post[1]).mention
                 description = post[2] or "No description available"
-                category = post[4]
-                time_and_date = post[3]
+                category = post[3]
+                time_and_date = post[4]
 
                 embed.add_field(name="ID", value=post[0], inline=True)
                 embed.add_field(name="Author", value=author, inline=True)
@@ -396,8 +391,8 @@ async def list(ctx):
             for post in paged_posts:
                 author = ctx.guild.get_member(post[1]).mention
                 description = post[2] or "No description available"
-                category = post[4]
-                time_and_date = post[3]
+                category = post[3]
+                time_and_date = post[4]
 
                 embed.add_field(name="ID", value=post[0], inline=True)
                 embed.add_field(name="Author", value=author, inline=True)
@@ -474,8 +469,6 @@ async def about(ctx):
 
 
 
-#Help Command
-
 @bot.command()
 async def help(ctx):
     prefix = "$"  # Customize the bot's prefix as needed
@@ -491,35 +484,32 @@ async def help(ctx):
         "$report <bug_description>": "Report a bug or issue with the bot.\nUsage: {}report [bug_description]".format(prefix)
     }
 
+    moderator_commands = {
+        "$set_guild_setting <setting_name> <value>": "Set the value of a guild setting.\nUsage: {}set_guild_setting [setting_name] [value]".format(prefix),
+        "$set_lfg_channel #Channel_Name": "Set the channel where LFG posts are sent.\nUsage: {}set_lfg_channel [#channel]".format(prefix),
+        "$set_lfg_role @Role_Name": "Set the role to ping for LFG posts.\nUsage: {}set_lfg_role [@role]".format(prefix)
+    }
+
+    embed = discord.Embed(title="Bot Commands", color=0x00ff00)
+
     general_help = "Here are the available commands:\n\n" + "\n".join([
         "**{}**: {}".format(command, usage) for command, usage in general_commands.items()
     ])
-    general_embed = discord.Embed(title="General Commands", description=general_help, color=0x00ff00)
+    embed.add_field(name="General Commands", value=general_help, inline=False)
 
     if ctx.author.guild_permissions.manage_guild:
-        moderator_commands = {
-            "$set_channel #Channel_Name": "Set the channel where LFG posts are sent.\nUsage: {}set_channel [#channel]".format(prefix),
-            "$set_active_channel #Channel_Name": "Set the channel where the bot command is active.\nUsage: {}set_active_channel [#channel]".format(prefix),
-            "$set_lfg_role @Role_Name": "Set the role to ping for LFG posts.\nUsage: {}set_lfg_role [@role]".format(prefix)
-        }
         moderator_help = "Here are the moderator-exclusive commands:\n\n" + "\n".join([
             "**{}**: {}".format(command, usage) for command, usage in moderator_commands.items()
         ])
-        moderator_embed = discord.Embed(title="Moderator Commands", description=moderator_help, color=0x00ff00)
+        embed.add_field(name="Moderator Commands", value=moderator_help, inline=False)
 
     about_help = "This bot helps users create and manage LFG (Looking For Group) posts in your server.\nUse the following command to get more information about the bot:\n{}about".format(prefix)
-    about_embed = discord.Embed(title="About", description=about_help, color=0x00ff00)
+    embed.add_field(name="About", value=about_help, inline=False)
 
     bug_report_help = "To report a bug or issue with the bot, use the following command:\n{}report <bug_description>".format(prefix)
-    bug_report_embed = discord.Embed(title="Bug Report", description=bug_report_help, color=0x00ff00)
+    embed.add_field(name="Bug Report", value=bug_report_help, inline=False)
 
-    await ctx.send(embed=general_embed)
-
-    if ctx.author.guild_permissions.manage_guild:
-        await ctx.send(embed=moderator_embed)
-
-    await ctx.send(embed=about_embed)
-    await ctx.send(embed=bug_report_embed)
+    await ctx.send(embed=embed)
 
 
 @bot.command()
