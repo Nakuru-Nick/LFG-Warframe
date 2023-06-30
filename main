@@ -7,37 +7,8 @@ from discord.ext import commands
 import sqlite3
 import datetime
 import math
+import os
 from dotenv import load_dotenv
-
-# Set up logging
-logging.basicConfig(level=logging.ERROR)
-logger = logging.getLogger(__name__)
-
-# Define server and channel information
-SERVER_ID = '1121721749860515901'
-CHANNEL_ID = '1123912418360307788'
-
-def send_message_to_server(message):
-    try:
-        # Send message to server
-        response = requests.post(f"https://api.example.com/servers/{SERVER_ID}/channels/{CHANNEL_ID}/messages", json={'content': message})
-        response.raise_for_status()
-        logger.info("Message sent successfully")
-    except requests.exceptions.HTTPError as e:
-        logger.error(f"HTTP error occurred while sending message: {e}")
-        raise
-    except requests.exceptions.RequestException as e:
-        logger.error(f"An error occurred while sending message: {e}")
-        raise
-
-# Example usage
-try:
-    send_message_to_server("Hello, server!")
-except Exception as e:
-    # Log the exception to the specified server and channel
-    logger.error(f"An exception occurred: {e}")
-    send_message_to_server(f"An exception occurred: {e}")
-
 
 # Load the environment variables from .env file
 load_dotenv()
@@ -45,6 +16,41 @@ load_dotenv()
 # Access the DISCORD_TOKEN environment variable
 import os
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
+
+# Set up logging
+logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger(__name__)
+
+
+# Load environment variables from .env file
+load_dotenv()
+
+SERVER_ID = "1121721749860515901"
+CHANNEL_ID = "1123912418360307788"
+
+def send_message_to_server(message):
+    try:
+        bot_token = os.getenv("DISCORD_TOKEN")
+
+        headers = {
+            "Authorization": f"Bot {bot_token}",
+            "Content-Type": "application/json"
+        }
+
+        # Send message to server
+        url = f"https://discord.com/api/v9/channels/{CHANNEL_ID}/messages"
+        payload = {"content": message}
+        response = requests.post(url, headers=headers, json=payload)
+        response.raise_for_status()
+        print("Message sent successfully")
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP error occurred while sending message: {e}")
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred while sending message: {e}")
+
+# Example usage
+send_message_to_server("Hello, server!")
+
 
 # Your bot code here
 
@@ -117,9 +123,23 @@ async def create(ctx):
 
     try:
         await ctx.send("Enter the details for your LFG post.")
-        await ctx.send("Please provide the LFG posting's description:")
-        lfg_posting = await bot.wait_for("message", check=check_author(ctx.author))
-        lfg_posting = lfg_posting.content
+
+        description_embed = discord.Embed(title="LFG Post Description", description="Please provide the LFG posting's description:")
+        description_message = await ctx.send(embed=description_embed)
+
+        def check_cancel(reaction, user):
+            return user == ctx.author and str(reaction.emoji) == "❌" and reaction.message.id == description_message.id
+
+        await description_message.add_reaction("❌")
+
+        try:
+            description_response = await bot.wait_for("message", check=check_author(ctx.author), timeout=60)
+            lfg_posting = description_response.content
+        except asyncio.TimeoutError:
+            await ctx.send("LFG post creation timed out.")
+            return
+        finally:
+            await description_message.clear_reactions()
 
         time_and_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -180,27 +200,28 @@ async def create(ctx):
 
 #Setting LFG Channel
 
+# Set LFG and Active Channel
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def set_lfg_channel(ctx, channel: discord.TextChannel):
-    cursor.execute("INSERT OR REPLACE INTO guilds (guild_id, lfg_channel_id) VALUES (?, ?)", (ctx.guild.id, channel.id))
-    conn.commit()
-    await ctx.send(f"LFG channel set to {channel.mention}")
+async def set_channel(ctx, lfg_channel: discord.TextChannel, active_channel: discord.TextChannel):
+    set_guild_setting(ctx.guild.id, "lfg_channel_id", lfg_channel.id)
+    set_guild_setting(ctx.guild.id, "active_channel_id", active_channel.id)
+    await ctx.send(f"LFG channel set to {lfg_channel.mention} and active channel set to {active_channel.mention}")
 
+# Set LFG Role and LFG Ping Role
 @bot.command()
 @commands.has_permissions(administrator=True)
-async def set_active_channel(ctx, channel: discord.TextChannel):
-    cursor.execute("INSERT OR REPLACE INTO guilds (guild_id, active_channel_id) VALUES (?, ?)", (ctx.guild.id, channel.id))
-    conn.commit()
-    await ctx.send(f"Active channel set to {channel.mention}")
+async def set_role(ctx, lfg_role: discord.Role, lfg_ping_role: discord.Role):
+    set_guild_setting(ctx.guild.id, "lfg_role_id", lfg_role.id)
+    set_guild_setting(ctx.guild.id, "lfg_ping_role_id", lfg_ping_role.id)
+    await ctx.send(f"LFG role set to {lfg_role.mention} and LFG ping role set to {lfg_ping_role.mention}")
 
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def set_lfg_role(ctx, role: discord.Role):
-    cursor.execute("INSERT OR REPLACE INTO guilds (guild_id, lfg_role_id) VALUES (?, ?)", (ctx.guild.id, role.id))
+# Common function to set guild settings
+def set_guild_setting(guild_id, setting_name, setting_value):
+    cursor.execute("INSERT OR REPLACE INTO guilds (guild_id, " + setting_name + ") VALUES (?, ?)", (guild_id, setting_value))
     conn.commit()
-    await ctx.send(f"LFG role set to {role.mention}")
 
+# Event: Message received
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
@@ -218,13 +239,7 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def set_lfg_ping_role(ctx, role: discord.Role):
-    cursor.execute("INSERT OR REPLACE INTO guilds (guild_id, lfg_ping_role_id) VALUES (?, ?)", (ctx.guild.id, role.id))
-    conn.commit()
-    await ctx.send(f"LFG ping role set to {role.mention}")
-
+#Filter Commands
 
 @bot.command()
 async def filter(ctx):
@@ -356,6 +371,26 @@ async def list(ctx):
             await ctx.send("No LFG posts found.")
             return
 
+        if len(posts) <= 4:
+            embed = discord.Embed(title="LFG Posts", color=0x00ff00)
+
+            for post in posts:
+                author = ctx.guild.get_member(post[1]).mention
+                description = post[2] or "No description available"
+                category = post[3]
+                time_and_date = post[4]
+
+                embed.add_field(name="ID", value=post[0], inline=True)
+                embed.add_field(name="Author", value=author, inline=True)
+                embed.add_field(name="Description", value=description, inline=True)
+                embed.add_field(name="Category", value=category, inline=True)
+                embed.add_field(name="Time and Date", value=time_and_date, inline=True)
+                embed.add_field(name="\u200b", value="".join(["-" for _ in range(len(embed.fields[0].value))]), inline=False)
+
+            embed.set_footer(text="No pagination needed.")
+            await ctx.send(embed=embed)
+            return
+
         posts_per_page = 4
         total_pages = math.ceil(len(posts) / posts_per_page)
         page = 1
@@ -370,8 +405,8 @@ async def list(ctx):
             for post in paged_posts:
                 author = ctx.guild.get_member(post[1]).mention
                 description = post[2] or "No description available"
-                category = post[4]
-                time_and_date = post[3]
+                category = post[3]
+                time_and_date = post[4]
 
                 embed.add_field(name="ID", value=post[0], inline=True)
                 embed.add_field(name="Author", value=author, inline=True)
@@ -448,8 +483,6 @@ async def about(ctx):
 
 
 
-#Help Command
-
 @bot.command()
 async def help(ctx):
     prefix = "$"  # Customize the bot's prefix as needed
@@ -465,35 +498,32 @@ async def help(ctx):
         "$report <bug_description>": "Report a bug or issue with the bot.\nUsage: {}report [bug_description]".format(prefix)
     }
 
+    moderator_commands = {
+        "$set_guild_setting <setting_name> <value>": "Set the value of a guild setting.\nUsage: {}set_guild_setting [setting_name] [value]".format(prefix),
+        "$set_lfg_channel #Channel_Name": "Set the channel where LFG posts are sent.\nUsage: {}set_lfg_channel [#channel]".format(prefix),
+        "$set_lfg_role @Role_Name": "Set the role to ping for LFG posts.\nUsage: {}set_lfg_role [@role]".format(prefix)
+    }
+
+    embed = discord.Embed(title="Bot Commands", color=0x00ff00)
+
     general_help = "Here are the available commands:\n\n" + "\n".join([
         "**{}**: {}".format(command, usage) for command, usage in general_commands.items()
     ])
-    general_embed = discord.Embed(title="General Commands", description=general_help, color=0x00ff00)
+    embed.add_field(name="General Commands", value=general_help, inline=False)
 
     if ctx.author.guild_permissions.manage_guild:
-        moderator_commands = {
-            "$set_channel #Channel_Name": "Set the channel where LFG posts are sent.\nUsage: {}set_channel [#channel]".format(prefix),
-            "$set_active_channel #Channel_Name": "Set the channel where the bot command is active.\nUsage: {}set_active_channel [#channel]".format(prefix),
-            "$set_lfg_role @Role_Name": "Set the role to ping for LFG posts.\nUsage: {}set_lfg_role [@role]".format(prefix)
-        }
         moderator_help = "Here are the moderator-exclusive commands:\n\n" + "\n".join([
             "**{}**: {}".format(command, usage) for command, usage in moderator_commands.items()
         ])
-        moderator_embed = discord.Embed(title="Moderator Commands", description=moderator_help, color=0x00ff00)
+        embed.add_field(name="Moderator Commands", value=moderator_help, inline=False)
 
     about_help = "This bot helps users create and manage LFG (Looking For Group) posts in your server.\nUse the following command to get more information about the bot:\n{}about".format(prefix)
-    about_embed = discord.Embed(title="About", description=about_help, color=0x00ff00)
+    embed.add_field(name="About", value=about_help, inline=False)
 
     bug_report_help = "To report a bug or issue with the bot, use the following command:\n{}report <bug_description>".format(prefix)
-    bug_report_embed = discord.Embed(title="Bug Report", description=bug_report_help, color=0x00ff00)
+    embed.add_field(name="Bug Report", value=bug_report_help, inline=False)
 
-    await ctx.send(embed=general_embed)
-
-    if ctx.author.guild_permissions.manage_guild:
-        await ctx.send(embed=moderator_embed)
-
-    await ctx.send(embed=about_embed)
-    await ctx.send(embed=bug_report_embed)
+    await ctx.send(embed=embed)
 
 
 @bot.command()
